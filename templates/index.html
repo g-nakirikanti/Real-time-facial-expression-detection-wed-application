@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detector</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h1>Real-time Emotion Detection</h1>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="video-container">
+                            <img id="video-feed" src="{{ url_for('static', filename='placeholder.jpg') }}" alt="Video Feed" class="img-fluid">
+                        </div>
+                        <div id="emotion" class="my-4"></div>
+                        <div id="emotion-stats" class="my-4"></div>
+                        <div class="d-flex justify-content-between">
+                            <button id="start-btn" class="btn btn-success"><i class="fas fa-play"></i> Start</button>
+                            <button id="stop-btn" class="btn btn-danger" disabled><i class="fas fa-stop"></i> Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            let videoFeed = $('#video-feed');
+            let startBtn = $('#start-btn');
+            let stopBtn = $('#stop-btn');
+            let updateInterval;
+
+            startBtn.click(function() {
+                videoFeed.attr('src', "{{ url_for('video_feed') }}");
+                startBtn.prop('disabled', true);
+                stopBtn.prop('disabled', false);
+                updateInterval = setInterval(updateEmotion, 1000);
+            });
+
+            stopBtn.click(function() {
+                videoFeed.attr('src', "{{ url_for('static', filename='placeholder.jpg') }}");
+                startBtn.prop('disabled', false);
+                stopBtn.prop('disabled', true);
+                clearInterval(updateInterval);
+                $('#emotion').text('');
+                $('#emotion-stats').html('');
+            });
+
+            function updateEmotion() {
+                $.getJSON('/emotion_data', function(data) {
+                    $('#emotion').html(`<strong>Current Emotion:</strong> ${data.emotion}`);
+                    let stats = '<strong>Emotion Statistics:</strong><br>';
+                    for (let key in data.stats) {
+                        stats += `${key}: ${data.stats[key]}<br>`;
+                    }
+                    $('#emotion-stats').html(stats);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
